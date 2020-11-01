@@ -6,11 +6,15 @@
 //
 
 import SwiftUI
+import Firebase
+import AVFoundation
 
 struct PlayerView: View {
-    var album: Album
-    var song: Song
+    @State var album: Album
+    @State var song: Song
     @State var isPlaying: Bool = true
+    @State var player = AVPlayer()
+    
     
     var body: some View {
         ZStack {
@@ -57,18 +61,56 @@ struct PlayerView: View {
                 .frame(height: 200, alignment: .center)
             }
             
+        }.onAppear {
+            changeSong()
         }
     }
     
     func playPause() {
         isPlaying.toggle()
+        if isPlaying {
+            player.play()
+        } else {
+            player.pause()
+        }
     }
     
     func next() {
-        
+        if let currentIndex = album.songs.firstIndex(of: song) {
+            player.pause()
+            if currentIndex != album.songs.count - 1 {
+                song = album.songs[currentIndex + 1]
+            } else {
+                song = album.songs[0]
+            }
+            changeSong()
+        }
     }
     
     func previous() {
-        
+        if let currentIndex = album.songs.firstIndex(of: song) {
+            player.pause()
+            if currentIndex != 0 {
+                song = album.songs[currentIndex - 1]
+            } else {
+                song = album.songs[album.songs.count - 1]
+            }
+            changeSong()
+        }
+    }
+    
+    func changeSong() {
+        let storage = Storage.storage().reference(forURL: song.file)
+        storage.downloadURL { (url, error) in
+            if let error = error {
+                print(error)
+            } else if let url = url {
+                do {
+                    try? AVAudioSession.sharedInstance().setCategory(.playback)
+                }
+                player = AVPlayer(url: url)
+                player.play()
+            }
+        }
     }
 }

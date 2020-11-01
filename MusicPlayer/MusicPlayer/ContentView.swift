@@ -6,10 +6,11 @@
 //
 
 import SwiftUI
+import Firebase
 
 struct ContentView: View {
+    @ObservedObject var ourData: OurData
     
-    var albums = Album.dummyData
     @State var currentAlbum: Album?
     
     var body: some View {
@@ -17,7 +18,7 @@ struct ContentView: View {
             ScrollView(.vertical) {
                 ScrollView(.horizontal, showsIndicators: false) {
                     LazyHStack {
-                        ForEach(albums) { album in
+                        ForEach(ourData.albums) { album in
                             AlbumArt(album: album, displayName: true).onTapGesture {
                                 currentAlbum = album
                             }
@@ -26,8 +27,12 @@ struct ContentView: View {
                 }
                 
                 LazyVStack {
-                    ForEach(currentAlbum?.songs ?? albums.first!.songs) { song in
-                        SongCell(album: currentAlbum ?? albums.first!, song: song)
+                    if ourData.albums.first != nil {
+                        ForEach(currentAlbum?.songs ?? ourData.albums.first!.songs) { song in
+                            SongCell(album: currentAlbum ?? ourData.albums.first!, song: song)
+                        }
+                    } else if ourData.isLoading {
+                        DottedCircle().frame(width: 50, height: 50)
                     }
                 }
             }

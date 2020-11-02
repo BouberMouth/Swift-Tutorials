@@ -57,12 +57,17 @@ struct PlayerView: View {
                         .foregroundColor(.black)
                         .opacity(0.2)
                     }
-                }.edgesIgnoringSafeArea(.all)
-                .frame(height: 200, alignment: .center)
+                }.frame(height: 150, alignment: .center)
+                .padding(.horizontal, 30)
+                .padding(.vertical, 90)
+                
             }
             
         }.onAppear {
             changeSong()
+            Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { (timer) in
+                //print(player.currentItem?.currentTime().seconds)
+            }
         }
     }
     
@@ -109,7 +114,9 @@ struct PlayerView: View {
                     try? AVAudioSession.sharedInstance().setCategory(.playback)
                 }
                 player = AVPlayer(url: url)
-                player.play()
+                if isPlaying {
+                    player.play()
+                }
             }
         }
     }

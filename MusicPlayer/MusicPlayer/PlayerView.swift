@@ -14,6 +14,8 @@ struct PlayerView: View {
     @State var song: Song
     @State var isPlaying: Bool = true
     @State var player = AVPlayer()
+    @State var currentTime: Double = 0
+    @State var duration: Double = 1
     
     
     var body: some View {
@@ -32,6 +34,10 @@ struct PlayerView: View {
                     .foregroundColor(.white)
                     .font(.title)
                     .fontWeight(.light)
+                ProgressionBar(elapsedTime: $currentTime, totalTime: $duration, player: $player)
+                    .foregroundColor(Color.white)
+                    .padding(.horizontal, 30)
+                    .frame(height: 30)
                 Spacer()
                 ZStack {
                     Color.white
@@ -66,7 +72,15 @@ struct PlayerView: View {
         }.onAppear {
             changeSong()
             Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { (timer) in
-                //print(player.currentItem?.currentTime().seconds)
+                print(currentTime, duration)
+                if currentTime >= duration && duration != 0 {
+                    currentTime = 0
+                    next()
+                } else {
+                    currentTime = player.currentItem?.currentTime().seconds ?? 0
+                }
+                
+
             }
         }
     }
@@ -105,6 +119,7 @@ struct PlayerView: View {
     }
     
     func changeSong() {
+        duration = song.duration
         let storage = Storage.storage().reference(forURL: song.file)
         storage.downloadURL { (url, error) in
             if let error = error {
@@ -113,11 +128,44 @@ struct PlayerView: View {
                 do {
                     try? AVAudioSession.sharedInstance().setCategory(.playback)
                 }
-                player = AVPlayer(url: url)
+                player.replaceCurrentItem(with: AVPlayerItem(url: url))
                 if isPlaying {
                     player.play()
                 }
+                print("-------")
             }
         }
+    }
+}
+
+
+struct ProgressionBar: View {
+    @Binding var elapsedTime: Double
+    @Binding var totalTime: Double
+    @Binding var player: AVPlayer
+
+    var body: some View {
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                Capsule().fill().opacity(0.3)
+                    .frame(height: geo.size.height / 3)
+                Capsule().fill()
+                    .frame(width: widthForBarIn(geo.size),
+                           height: geo.size.height / 3)
+                Circle().fill()
+                    .frame(width: geo.size.height, height: geo.size.height)
+                    .offset(x: widthForBarIn(geo.size) - geo.size.height / 2)
+                    .gesture(DragGesture()
+                                .onEnded({ (value) in
+                                    let newTime = elapsedTime + Double((value.translation.width * CGFloat(totalTime)) / geo.size.width)
+                                    elapsedTime = max(min(newTime, totalTime), 0)
+                                    player.seek(to: CMTime(seconds: elapsedTime, preferredTimescale: .max))
+                                }))
+            }
+        }
+    }
+    
+    func widthForBarIn(_ size: CGSize) -> CGFloat {
+        size.width / CGFloat(totalTime) * CGFloat(elapsedTime)
     }
 }

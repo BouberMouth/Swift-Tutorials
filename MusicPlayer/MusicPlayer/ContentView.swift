@@ -75,7 +75,7 @@ struct SongCell: View {
                 }
                 Text(song.name).bold()
                 Spacer()
-                Text(song.duration)
+                Text("\(song.duration)")
             }.padding(20)
         }.buttonStyle(PlainButtonStyle())
     }

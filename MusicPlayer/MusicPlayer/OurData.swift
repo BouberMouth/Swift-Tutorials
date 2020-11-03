@@ -31,7 +31,7 @@ class OurData: ObservableObject {
                     
                     for song in songs {
                         let songName = song.value["name"] as? String ?? "error"
-                        let songDuration = song.value["duration"] as? String ?? "error"
+                        let songDuration = song.value["duration"] as? Double ?? -1
                         let songFile = song.value["file"] as? String ?? "error"
                         
                         decodedSongs.append(Song(name: songName, duration: songDuration, file: songFile))

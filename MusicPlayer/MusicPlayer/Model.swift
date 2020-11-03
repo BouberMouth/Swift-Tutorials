@@ -10,7 +10,7 @@ import Foundation
 struct Song: Hashable, Identifiable {
     var id = UUID()
     var name: String
-    var duration: String
+    var duration: Double
     var file: String
 }
 
